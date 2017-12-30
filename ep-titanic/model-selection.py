@@ -290,55 +290,66 @@ def compute_score(clf, X, y, scoring='accuracy', defaul_cv = 5):
 
 
 def svc_classify(train, targets):
+    ''' The Support Vector Classifier needs you to set a few key parameters.
+    Read more about it here:
+    http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
+    The parameter grid allows you to sequentially test all the combinations and to pick the best.
+    IMPORTANT! While this helps this is still a brute force approach and it requires you to select the inputs to test.
+    The more parameters you try the more time you will need to run the test!
+    Start with a few parameter and then repeat testing with parameters close to the previous best ones!'''
+
     # Set the parameters by cross-validation
     tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-4, 1e-5],
                          'C': [100, 1000, 10000]},
                         {'kernel': ['linear'], 'C': [1, 10, 100]}]
+
+    # Learn about the difference between precision and recall here:
+    # http: // scikit - learn.org / stable / auto_examples / model_selection / plot_precision_recall.html
     scores = ['precision', 'recall']
+
     X_train, X_test, y_train, y_test = train_test_split(
         train, targets, test_size=0.5, random_state=0)
 
     for score in scores:
-        print("# Tuning hyper-parameters for %s" % score)
-        print()
+        print("# Tuning hyper-parameters for %s\n" % score)
 
         clf = GridSearchCV(SVC(), tuned_parameters, cv=5,
                            scoring='%s_macro' % score)
         clf.fit(X_train, y_train)
 
         print("Best parameters set found on development set:")
-        print()
         print(clf.best_params_)
-        print()
-        print("Grid scores on development set:")
-        print()
+        print("\nGrid scores on development set:")
         means = clf.cv_results_['mean_test_score']
         stds = clf.cv_results_['std_test_score']
         for mean, std, params in zip(means, stds, clf.cv_results_['params']):
             print("%0.3f (+/-%0.03f) for %r"
                   % (mean, std * 2, params))
-        print()
 
-        print("Detailed classification report:")
-        print()
-        print("The model is trained on the full development set.")
-        print("The scores are computed on the full evaluation set.")
-        print()
+        print("\nDetailed classification report:")
+        print("\nThe model is trained on the full development set.")
+        print("\nThe scores are computed on the full evaluation set.")
         y_true, y_pred = y_test, clf.predict(X_test)
         print(classification_report(y_true, y_pred))
-        print()
 
     # Best parameter for precision: {'C': 10000, 'gamma': 1e-05, 'kernel': 'rbf'}
     # Best parameter for recall:    {'C': 10000, 'gamma': 1e-05, 'kernel': 'rbf'}
 
 
 def random_forest_classify(train, targets):
+    ''' The Random Forest Classifier needs you to set a few key parameters.
+    Read more about it here:
+    http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
+    The parameter grid allows you to sequentially test all the combinations and to pick the best.
+    IMPORTANT! While this helps this is still a brute force approach and it requires you to select the inputs to test.
+    The more parameters you try the more time you will need to run the test!
+    Start with a few parameter and then repeat testing with parameters close to the previous best ones!'''
     parameter_grid = {
         'max_depth': [5, 6, 7],
-        'n_estimators': [15, 16, 17, 18],
-        'max_features': ['sqrt'],  #, 'auto', 'log2'],
-        'min_samples_split': [5],
-        'min_samples_leaf': [1],
+        'n_estimators': [2, 5, 10],
+        'max_features': ['sqrt', 'auto', 'log2'],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 3, 5],
         'bootstrap': [True, False],
     }
     forest = RandomForestClassifier()
@@ -358,33 +369,31 @@ def random_forest_classify(train, targets):
     mean, std = compute_score(model, train, targets, scoring='accuracy')
     print('Accuracy= %.2f +- %.2f' % (mean, 2*std))
 
-'''
-Best score: 0.8383838383838383
-Best parameters: {'bootstrap': True, 'max_depth': 5, 'max_features': 'sqrt', 'min_samples_leaf': 1, 'min_samples_split': 4, 'n_estimators': 11}
-Accuracy= 0.82 +- 0.05
 
-Best score: 0.8361391694725028
-Best parameters: {'bootstrap': True, 'max_depth': 7, 'max_features': 'sqrt', 'min_samples_leaf': 1, 'min_samples_split': 5, 'n_estimators': 15}
-Accuracy= 0.82 +- 0.03
+    # Best score: 0.8338945005611672
+    # Best parameters: {'bootstrap': False, 'max_depth': 5, 'max_features': 'sqrt', 'min_samples_leaf': 1, 'min_samples_split': 5, 'n_estimators': 16}
+    # Accuracy= 0.83 +- 0.03
 
-Best score: 0.8338945005611672
-Best parameters: {'bootstrap': False, 'max_depth': 5, 'max_features': 'sqrt', 'min_samples_leaf': 1, 'min_samples_split': 5, 'n_estimators': 16}
-Accuracy= 0.83 +- 0.03
 
-'''
 def main():
+    ''' Sample code to demonstrate the use of the GridSearchCV class.
+    '''
     # Load data
     combined = get_combined_data()
 
-    # Data Exploration
+    # Data Exploration. Make sure you understand your data before doing anything else!
     explore(combined)
 
-    # Data Preparation
+    # Data Preparation. Let's transform the training set into numeric (continuous, and categorical) variables!
     combined = prepare(combined)
 
+    # We will use the train and the targets data set to learn and the test to submit our predictions on Kaggle
     train, test, targets = recover_train_test_target(combined)
 
-    #svc_classify(train, targets)
+    # Finally! Let's have fun. Let's use GriSearchCV to test the hyper parameters of a support vector classifier
+    # and a random forest classifier
+
+    svc_classify(train, targets)
     random_forest_classify(train, targets)
 
 

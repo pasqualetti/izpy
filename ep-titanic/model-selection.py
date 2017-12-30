@@ -305,7 +305,7 @@ def svc_classify(train, targets):
 
     # Learn about the difference between precision and recall here:
     # http: // scikit - learn.org / stable / auto_examples / model_selection / plot_precision_recall.html
-    scores = ['precision', 'recall']
+    scores = ['precision']  #, 'recall']  # Commenting recall to speed the process up
 
     X_train, X_test, y_train, y_test = train_test_split(
         train, targets, test_size=0.5, random_state=0)
@@ -347,10 +347,10 @@ def random_forest_classify(train, targets):
     parameter_grid = {
         'max_depth': [5, 6, 7],
         'n_estimators': [2, 5, 10],
-        'max_features': ['sqrt', 'auto', 'log2'],
+        'max_features': ['sqrt', 'auto'], #'log2'],
         'min_samples_split': [2, 5, 10],
         'min_samples_leaf': [1, 3, 5],
-        'bootstrap': [True, False],
+        'bootstrap': [True], #, False],
     }
     forest = RandomForestClassifier()
     cross_validation = StratifiedKFold(n_splits=5)
